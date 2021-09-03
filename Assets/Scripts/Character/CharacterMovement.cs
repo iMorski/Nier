@@ -3,21 +3,22 @@ using UnityEngine;
 
 public class CharacterMovement : MonoBehaviour
 {
+    [SerializeField] private float Speed;
+    [SerializeField] private float SmoothTime;
+    
     [NonSerialized] public Rigidbody Rigidbody;
     [NonSerialized] public Animator Animator;
     
     private void Awake()
     {
         Rigidbody = GetComponent<Rigidbody>();
-        Animator = GetComponent<Animator>();
+        Animator = GetComponentInChildren<Animator>();
     }
     
     private bool OnCast;
 
     public void ChangeState()
     {
-        float SmoothTime = CharacterContainer.Instance.MoveSmoothTime;
-        
         if (!OnCast) Animator.CrossFade("Movement-Cast", SmoothTime);
         else Animator.CrossFade("Movement-Free", SmoothTime);
         
@@ -26,32 +27,32 @@ public class CharacterMovement : MonoBehaviour
 
     private Vector3 Position;
 
-    public void ChangePosition(Vector3 Direction)
+    public void ChangePosition(Vector3 Direction, float Distance)
     {
         if (Direction != new Vector3())
         {
             Position = Vector3.Normalize(new Vector3(
-                Direction.x, 0.0f, Direction.z));
+                Direction.x, .0f, Direction.z));
 
             SmoothRotation();
-            SmoothAnimatorSpeed(1.0f);
         }
         else
         {
-            SmoothPosition();
-            SmoothAnimatorSpeed(0.0f);
+            SmoothStop();
         }
+        
+        SmoothAnimatorSpeed(Distance);
 
         Rigidbody.velocity = Position * SmoothSpeed();
     }
     
     private Vector3 PositionVelocity;
     
-    public void SmoothPosition()
+    public void SmoothStop()
     {
         if (Position != new Vector3()) Position = 
             Vector3.SmoothDamp(Position, new Vector3(),
-                ref PositionVelocity, CharacterContainer.Instance.MoveSmoothTime);
+                ref PositionVelocity, SmoothTime);
     }
 
     private Vector3 RotationDirection;
@@ -61,7 +62,7 @@ public class CharacterMovement : MonoBehaviour
     {
         if (RotationDirection != Position) RotationDirection = 
             Vector3.SmoothDamp(RotationDirection, Position,
-                ref RotationVelocity, CharacterContainer.Instance.MoveSmoothTime);
+                ref RotationVelocity,SmoothTime);
         
         transform.rotation = Quaternion.LookRotation(RotationDirection);
     }
@@ -73,7 +74,7 @@ public class CharacterMovement : MonoBehaviour
     {
         if (AnimatorSpeed != Value) AnimatorSpeed = 
             Mathf.SmoothDamp(AnimatorSpeed, Value,
-                ref AnimatorVelocity, CharacterContainer.Instance.MoveSmoothTime);
+                ref AnimatorVelocity, SmoothTime);
         
         Animator.SetFloat("Speed", AnimatorSpeed);
     }
@@ -83,15 +84,12 @@ public class CharacterMovement : MonoBehaviour
     
     public float SmoothSpeed()
     {
-        float Speed = CharacterContainer.Instance.MoveSpeed;
-        float SmoothTime = CharacterContainer.Instance.MoveSmoothTime;
-        
         if (OnCast && SpeedCurrent > Speed / 2.0f) SpeedCurrent =
             Mathf.SmoothDamp(SpeedCurrent, Speed / 2.0f, ref SpeedVelocity, SmoothTime);
         
         else if (!OnCast && SpeedCurrent < Speed) SpeedCurrent =
             Mathf.SmoothDamp(SpeedCurrent, Speed, ref SpeedVelocity, SmoothTime);
 
-        return SpeedCurrent * Time.fixedDeltaTime;
+        return SpeedCurrent;
     }
 }

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class UiTouch : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
+public class Touch : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
     [SerializeField] private float TapDistance;
     
@@ -36,13 +36,13 @@ public class UiTouch : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointe
         BeginMousePosition = MousePosition(Data);
     }
 
-    private bool SwipeCheck;
+    private bool OnSwipeCheck;
     
     public void OnDrag(PointerEventData Data)
     {
-        if (!SwipeCheck && !DragInTapDistance(Data))
+        if (!OnSwipeCheck && !DragInTapDistance(Data))
         {
-            SwipeCheck = !SwipeCheck;
+            OnSwipeCheck = !OnSwipeCheck;
             
             SwipeByDistance?.Invoke(GetDirection(Data));
         }
@@ -63,7 +63,7 @@ public class UiTouch : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointe
         }
         
         if (!DragInTapDistance(Data)) SwipeByRelease?.Invoke(GetDirection(Data));
-        if (SwipeCheck) SwipeCheck = !SwipeCheck;
+        if (OnSwipeCheck) OnSwipeCheck = !OnSwipeCheck;
     }
 
     private Vector2 GetDirection(PointerEventData Data)
@@ -82,7 +82,8 @@ public class UiTouch : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointe
 
     private bool DragInTapDistance(PointerEventData Data)
     {
-        return Vector2.Distance(MousePosition(Data), BeginMousePosition) < TapDistance;
+        return Vector2.Distance(MousePosition(Data),
+                   BeginMousePosition) < TapDistance;
     }
     
     private bool InScreen(PointerEventData Data)
